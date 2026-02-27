@@ -1,0 +1,5 @@
+{
+  "name": "Super Space Shooter",
+  "description": "Um jogo de naves estilo Super Nintendo (SNES).",
+  "requestFramePermissions": []
+}
