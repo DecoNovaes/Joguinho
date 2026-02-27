@@ -7,7 +7,7 @@ const PLAYER_SPEED = 6;
 const BULLET_SPEED = 15;
 const ENEMY_SPEED_BASE = 2;
 const FIRE_COOLDOWN = 10; // Frames between shots
-const STAR_COUNT = 100;
+const PROP_COUNT = 8;
 
 // --- Types ---
 type Player = {
@@ -56,12 +56,14 @@ type Particle = {
   size: number;
 };
 
-type Star = {
+type HouseProp = {
   x: number;
   y: number;
-  size: number;
+  width: number;
+  height: number;
   speed: number;
   color: string;
+  type: 'rug' | 'toy' | 'stain';
 };
 
 type GameState = {
@@ -69,7 +71,7 @@ type GameState = {
   bullets: Bullet[];
   enemies: Enemy[];
   particles: Particle[];
-  stars: Star[];
+  houseProps: HouseProp[];
   score: number;
   isGameOver: boolean;
   isPaused: boolean;
@@ -320,7 +322,7 @@ export default function App() {
     bullets: [],
     enemies: [],
     particles: [],
-    stars: [],
+    houseProps: [],
     score: 0,
     isGameOver: false,
     isPaused: false,
@@ -333,14 +335,20 @@ export default function App() {
 
   // --- Initialization ---
   const initGame = () => {
-    const stars: Star[] = [];
-    for (let i = 0; i < STAR_COUNT; i++) {
-      stars.push({
+    const houseProps: HouseProp[] = [];
+    const types: HouseProp['type'][] = ['rug', 'toy', 'stain'];
+    const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#64748b'];
+    
+    for (let i = 0; i < PROP_COUNT; i++) {
+      const type = types[Math.floor(Math.random() * types.length)];
+      houseProps.push({
         x: Math.random() * CANVAS_WIDTH,
         y: Math.random() * CANVAS_HEIGHT,
-        size: Math.random() * 2 + 1,
-        speed: Math.random() * 3 + 1,
-        color: Math.random() > 0.5 ? '#ffffff' : '#94a3b8',
+        width: type === 'rug' ? randomRange(80, 150) : randomRange(15, 30),
+        height: type === 'rug' ? randomRange(100, 200) : randomRange(15, 30),
+        speed: 2, // Background scrolling speed
+        color: colors[Math.floor(Math.random() * colors.length)],
+        type,
       });
     }
 
@@ -349,7 +357,7 @@ export default function App() {
       bullets: [],
       enemies: [],
       particles: [],
-      stars,
+      houseProps,
       score: 0,
       isGameOver: false,
       isPaused: false,
@@ -475,12 +483,18 @@ export default function App() {
     }
 
     // --- Update Entities ---
-    // Stars
-    state.stars.forEach(star => {
-      star.y += star.speed;
-      if (star.y > CANVAS_HEIGHT) {
-        star.y = 0;
-        star.x = Math.random() * CANVAS_WIDTH;
+    // House Props
+    state.houseProps.forEach(prop => {
+      prop.y += prop.speed;
+      if (prop.y > CANVAS_HEIGHT) {
+        prop.y = -prop.height;
+        prop.x = Math.random() * CANVAS_WIDTH;
+        const types: HouseProp['type'][] = ['rug', 'toy', 'stain'];
+        const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#64748b'];
+        prop.type = types[Math.floor(Math.random() * types.length)];
+        prop.width = prop.type === 'rug' ? randomRange(80, 150) : randomRange(15, 30);
+        prop.height = prop.type === 'rug' ? randomRange(100, 200) : randomRange(15, 30);
+        prop.color = colors[Math.floor(Math.random() * colors.length)];
       }
     });
 
@@ -662,17 +676,60 @@ export default function App() {
   const draw = (ctx: CanvasRenderingContext2D) => {
     const state = stateRef.current;
 
-    // Clear canvas
-    ctx.fillStyle = '#0f172a'; // Dark slate background
+    // Clear canvas - Wooden floor
+    ctx.fillStyle = '#d4a373'; // Wooden floor color
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Draw Stars
-    state.stars.forEach(star => {
-      ctx.fillStyle = star.color;
-      ctx.globalAlpha = star.speed / 4; // Faster stars are brighter
-      ctx.fillRect(star.x, star.y, star.size, star.size);
+    // Draw floor planks
+    ctx.strokeStyle = '#cda06d';
+    ctx.lineWidth = 2;
+    const plankWidth = 60;
+    const plankHeight = 150;
+    const offset = (state.frame * 2) % plankHeight;
+    
+    for (let x = 0; x < CANVAS_WIDTH; x += plankWidth) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, CANVAS_HEIGHT);
+      ctx.stroke();
+      
+      // Staggered horizontal lines
+      const stagger = (x / plankWidth) % 2 === 0 ? 0 : plankHeight / 2;
+      for (let y = -plankHeight; y < CANVAS_HEIGHT + plankHeight; y += plankHeight) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + offset + stagger);
+        ctx.lineTo(x + plankWidth, y + offset + stagger);
+        ctx.stroke();
+      }
+    }
+
+    // Draw House Props
+    state.houseProps.forEach(prop => {
+      ctx.fillStyle = prop.color;
+      if (prop.type === 'rug') {
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.roundRect(prop.x, prop.y, prop.width, prop.height, 10);
+        ctx.fill();
+        // rug pattern
+        ctx.strokeStyle = '#ffffff';
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(prop.x + 5, prop.y + 5, prop.width - 10, prop.height - 10);
+        ctx.globalAlpha = 1.0;
+      } else if (prop.type === 'toy') {
+        ctx.beginPath();
+        ctx.arc(prop.x + prop.width/2, prop.y + prop.height/2, prop.width/2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // stain
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.ellipse(prop.x + prop.width/2, prop.y + prop.height/2, prop.width/2, prop.height/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+      }
     });
-    ctx.globalAlpha = 1.0;
 
     if (!gameStarted) return;
 
@@ -739,7 +796,7 @@ export default function App() {
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
-        ctx.fillStyle = '#0f172a';
+        ctx.fillStyle = '#d4a373';
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       }
     }
