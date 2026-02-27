@@ -91,89 +91,218 @@ const checkCollision = (rect1: any, rect2: any) => {
 };
 
 // --- Drawing Functions ---
-const drawPlayerShip = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, isInvulnerable: boolean, frame: number) => {
+const drawPlayerAnimal = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, isInvulnerable: boolean, frame: number) => {
   if (isInvulnerable && Math.floor(frame / 4) % 2 === 0) return; // Flicker effect
 
   ctx.save();
   ctx.translate(x + width / 2, y + height / 2);
 
-  // Engine flame
-  ctx.fillStyle = Math.floor(frame / 2) % 2 === 0 ? '#ffaa00' : '#ff0000';
+  // Cat
+  ctx.fillStyle = '#f59e0b'; // Orange cat
+  
+  // Tail (wagging)
   ctx.beginPath();
-  ctx.moveTo(-6, height / 2 - 4);
-  ctx.lineTo(6, height / 2 - 4);
-  ctx.lineTo(0, height / 2 + randomRange(10, 20));
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#d97706';
+  const tailWag = Math.sin(frame * 0.2) * 10;
+  ctx.moveTo(0, height/2);
+  ctx.quadraticCurveTo(tailWag, height/2 + 15, tailWag * 1.5, height/2 + 20);
+  ctx.stroke();
+
+  // Body
+  ctx.beginPath();
+  ctx.ellipse(0, 0, width / 2.5, height / 2, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Main body
-  ctx.fillStyle = '#e2e8f0'; // Light gray
+  // Ears
   ctx.beginPath();
-  ctx.moveTo(0, -height / 2);
-  ctx.lineTo(width / 2, height / 2 - 5);
-  ctx.lineTo(-width / 2, height / 2 - 5);
+  ctx.moveTo(-width/3, -height/3);
+  ctx.lineTo(-width/2, -height/2 - 5);
+  ctx.lineTo(-width/6, -height/2 + 2);
   ctx.fill();
 
-  // Cockpit
-  ctx.fillStyle = '#38bdf8'; // Light blue
   ctx.beginPath();
-  ctx.moveTo(0, -height / 4);
-  ctx.lineTo(4, 0);
-  ctx.lineTo(-4, 0);
+  ctx.moveTo(width/3, -height/3);
+  ctx.lineTo(width/2, -height/2 - 5);
+  ctx.lineTo(width/6, -height/2 + 2);
   ctx.fill();
 
-  // Wings
-  ctx.fillStyle = '#ef4444'; // Red accents
+  // Eyes
+  ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.moveTo(-width / 2, height / 2 - 5);
-  ctx.lineTo(-width / 2 - 10, height / 2 + 5);
-  ctx.lineTo(-width / 2 + 5, height / 2 - 5);
+  ctx.arc(-width/6, -height/4, 4, 0, Math.PI * 2);
+  ctx.arc(width/6, -height/4, 4, 0, Math.PI * 2);
   ctx.fill();
+  
+  ctx.fillStyle = '#000000';
   ctx.beginPath();
-  ctx.moveTo(width / 2, height / 2 - 5);
-  ctx.lineTo(width / 2 + 10, height / 2 + 5);
-  ctx.lineTo(width / 2 - 5, height / 2 - 5);
+  ctx.arc(-width/6, -height/4 - 1, 2, 0, Math.PI * 2);
+  ctx.arc(width/6, -height/4 - 1, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Nose
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(0, -height/6, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Whiskers
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-width/4, -height/6); ctx.lineTo(-width/2 - 5, -height/6 - 2);
+  ctx.moveTo(-width/4, -height/6 + 2); ctx.lineTo(-width/2 - 5, -height/6 + 4);
+  ctx.moveTo(width/4, -height/6); ctx.lineTo(width/2 + 5, -height/6 - 2);
+  ctx.moveTo(width/4, -height/6 + 2); ctx.lineTo(width/2 + 5, -height/6 + 4);
+  ctx.stroke();
+
+  // Paws (flying)
+  ctx.fillStyle = '#d97706';
+  ctx.beginPath();
+  ctx.arc(-width/3, height/3, 5, 0, Math.PI * 2);
+  ctx.arc(width/3, height/3, 5, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
 };
 
-const drawEnemyShip = (ctx: CanvasRenderingContext2D, enemy: Enemy) => {
+const drawEnemyAnimal = (ctx: CanvasRenderingContext2D, enemy: Enemy) => {
   ctx.save();
   ctx.translate(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
 
   if (enemy.type === 'basic') {
-    ctx.fillStyle = '#8b5cf6'; // Purple
-    ctx.beginPath();
-    ctx.moveTo(0, enemy.height / 2);
-    ctx.lineTo(enemy.width / 2, -enemy.height / 2);
-    ctx.lineTo(-enemy.width / 2, -enemy.height / 2);
-    ctx.fill();
+    // Mouse
+    ctx.fillStyle = '#9ca3af'; // Gray
     
-    // Cockpit
-    ctx.fillStyle = '#fde047'; // Yellow
-    ctx.fillRect(-3, -enemy.height / 4, 6, 6);
-  } else if (enemy.type === 'weaver') {
-    ctx.fillStyle = '#10b981'; // Green
+    // Tail
+    ctx.strokeStyle = '#fca5a5';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, enemy.height / 2);
-    ctx.lineTo(enemy.width / 2, 0);
-    ctx.lineTo(0, -enemy.height / 2);
-    ctx.lineTo(-enemy.width / 2, 0);
+    ctx.moveTo(0, -enemy.height/2);
+    ctx.quadraticCurveTo(Math.sin(enemy.timer * 0.2) * 10, -enemy.height/2 - 15, 0, -enemy.height/2 - 20);
+    ctx.stroke();
+
+    // Ears
+    ctx.fillStyle = '#9ca3af';
+    ctx.beginPath();
+    ctx.arc(-enemy.width/3, enemy.height/4, 8, 0, Math.PI * 2);
+    ctx.arc(enemy.width/3, enemy.height/4, 8, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = '#fca5a5';
+    ctx.beginPath();
+    ctx.arc(-enemy.width/3, enemy.height/4, 4, 0, Math.PI * 2);
+    ctx.arc(enemy.width/3, enemy.height/4, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = '#9ca3af';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, enemy.width / 2.5, enemy.height / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = '#ef4444'; // Red eyes for evil mouse
+    ctx.beginPath();
+    ctx.arc(-enemy.width/6, enemy.height/4, 2, 0, Math.PI * 2);
+    ctx.arc(enemy.width/6, enemy.height/4, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Nose
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(0, enemy.height/2, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+  } else if (enemy.type === 'weaver') {
+    // Bird
+    ctx.fillStyle = '#3b82f6'; // Blue
+    
+    // Wings
+    const wingFlap = Math.sin(enemy.timer * 0.5) * 10;
+    ctx.beginPath();
+    ctx.moveTo(-enemy.width/4, 0);
+    ctx.lineTo(-enemy.width/2 - 10, wingFlap);
+    ctx.lineTo(-enemy.width/4, enemy.height/4);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(enemy.width/4, 0);
+    ctx.lineTo(enemy.width/2 + 10, wingFlap);
+    ctx.lineTo(enemy.width/4, enemy.height/4);
+    ctx.fill();
+
+    // Body
+    ctx.beginPath();
+    ctx.ellipse(0, 0, enemy.width / 3, enemy.height / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beak
+    ctx.fillStyle = '#facc15'; // Yellow
+    ctx.beginPath();
+    ctx.moveTo(-4, enemy.height/3);
+    ctx.lineTo(4, enemy.height/3);
+    ctx.lineTo(0, enemy.height/2 + 5);
+    ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-enemy.width/6, enemy.height/6, 3, 0, Math.PI * 2);
+    ctx.arc(enemy.width/6, enemy.height/6, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(-enemy.width/6, enemy.height/6 + 1, 1.5, 0, Math.PI * 2);
+    ctx.arc(enemy.width/6, enemy.height/6 + 1, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
   } else if (enemy.type === 'tank') {
-    ctx.fillStyle = '#f97316'; // Orange
-    ctx.fillRect(-enemy.width / 2, -enemy.height / 2, enemy.width, enemy.height);
-    ctx.fillStyle = '#475569'; // Dark gray
-    ctx.fillRect(-enemy.width / 2 + 5, -enemy.height / 2 + 5, enemy.width - 10, enemy.height - 10);
+    // Dog (Bulldog)
+    ctx.fillStyle = '#8b5a2b'; // Brown
+    
+    // Ears (floppy)
+    ctx.beginPath();
+    ctx.ellipse(-enemy.width/2.5, -enemy.height/4, 8, 15, -Math.PI/6, 0, Math.PI * 2);
+    ctx.ellipse(enemy.width/2.5, -enemy.height/4, 8, 15, Math.PI/6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body/Head
+    ctx.beginPath();
+    ctx.roundRect(-enemy.width/2, -enemy.height/2, enemy.width, enemy.height, 10);
+    ctx.fill();
+
+    // Snout
+    ctx.fillStyle = '#f5deb3'; // Light brown
+    ctx.beginPath();
+    ctx.ellipse(0, enemy.height/4, enemy.width/2.5, enemy.height/3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Nose
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.ellipse(0, enemy.height/6, 6, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-enemy.width/4, -enemy.height/6, 5, 0, Math.PI * 2);
+    ctx.arc(enemy.width/4, -enemy.height/6, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ef4444'; // Angry red pupils
+    ctx.beginPath();
+    ctx.arc(-enemy.width/4, -enemy.height/6 + 1, 2, 0, Math.PI * 2);
+    ctx.arc(enemy.width/4, -enemy.height/6 + 1, 2, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   // HP Bar if damaged
   if (enemy.hp < enemy.maxHp) {
     const hpPercent = Math.max(0, enemy.hp / enemy.maxHp);
     ctx.fillStyle = 'red';
-    ctx.fillRect(-enemy.width / 2, -enemy.height / 2 - 8, enemy.width, 4);
+    ctx.fillRect(-enemy.width / 2, -enemy.height / 2 - 12, enemy.width, 4);
     ctx.fillStyle = '#22c55e';
-    ctx.fillRect(-enemy.width / 2, -enemy.height / 2 - 8, enemy.width * hpPercent, 4);
+    ctx.fillRect(-enemy.width / 2, -enemy.height / 2 - 12, enemy.width * hpPercent, 4);
   }
 
   ctx.restore();
@@ -558,22 +687,38 @@ export default function App() {
     // Draw Bullets
     state.bullets.forEach(bullet => {
       ctx.fillStyle = bullet.color;
-      ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-      // Glow effect
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = bullet.color;
-      ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-      ctx.shadowBlur = 0;
+      if (!bullet.isEnemy) {
+        // Yarn ball (player)
+        ctx.beginPath();
+        ctx.arc(bullet.x + bullet.width/2, bullet.y + bullet.height/2, bullet.width, 0, Math.PI * 2);
+        ctx.fill();
+        // Glow effect
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = bullet.color;
+        ctx.arc(bullet.x + bullet.width/2, bullet.y + bullet.height/2, bullet.width, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        // Bone or simple drop (enemy)
+        ctx.beginPath();
+        ctx.roundRect(bullet.x, bullet.y, bullet.width, bullet.height, 4);
+        ctx.fill();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = bullet.color;
+        ctx.roundRect(bullet.x, bullet.y, bullet.width, bullet.height, 4);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
     });
 
     // Draw Enemies
     state.enemies.forEach(enemy => {
-      drawEnemyShip(ctx, enemy);
+      drawEnemyAnimal(ctx, enemy);
     });
 
     // Draw Player
     if (!state.isGameOver) {
-      drawPlayerShip(ctx, state.player.x, state.player.y, state.player.width, state.player.height, state.player.invulnerable > 0, state.frame);
+      drawPlayerAnimal(ctx, state.player.x, state.player.y, state.player.width, state.player.height, state.player.invulnerable > 0, state.frame);
     }
   };
 
@@ -634,7 +779,7 @@ export default function App() {
         {!gameStarted && (
           <div className="absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center z-20 backdrop-blur-sm">
             <h1 className="text-4xl text-transparent bg-clip-text bg-gradient-to-b from-blue-400 to-indigo-600 mb-8 text-center leading-relaxed drop-shadow-lg">
-              SUPER<br/>SPACE<br/>SHOOTER
+              SUPER<br/>PET<br/>BLASTER
             </h1>
             <div className="text-sm text-slate-300 mb-8 text-center leading-loose">
               <p>ARROWS / WASD to Move</p>
